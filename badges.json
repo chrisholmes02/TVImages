@@ -183,7 +183,7 @@
     {
       "groupId": "gv",
       "id": "v-hdr10",
-      "imageURL": "https://files.catbox.moe/hpuz90.png",
+      "imageURL": "https://raw.githubusercontent.com/chrisholmes02/TVImages/main/HDR.svg",
       "isEnabled": true,
       "name": "HDR10",
       "pattern": "(?i)^(?!.*\\b(?:dv|dovi|dolby[\\s._-]?vision)\\b)(?=.*hdr[\\s._-]?10)(?!.*hdr[\\s._-]?10[\\s._-]?(?:\\+|plus|p))",
