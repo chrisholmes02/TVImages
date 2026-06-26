@@ -46,7 +46,7 @@ GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO     = os.environ.get("GITHUB_REPO", "")            # owner/repo
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
-GITHUB_FILE     = os.environ.get("GITHUB_FILE_PATH", "backdrop/backdrop.png")
+GITHUB_FILE     = os.environ.get("GITHUB_FILE_PATH", "Backdrops/backdrop.png")
 WIDTH           = int(os.environ.get("BACKDROP_WIDTH",  "1920"))
 HEIGHT          = int(os.environ.get("BACKDROP_HEIGHT", "1080"))
 HEADLESS        = os.environ.get("HEADLESS", "true").lower() != "false"
