@@ -20,6 +20,7 @@ import time
 # ---------------------------------------------------------------------------
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+    print("Playwright sync")
 except ImportError:
     sys.exit(
         "playwright is not installed.\n"
