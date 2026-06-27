@@ -18,7 +18,10 @@ jobs:
       GITHUB_TOKEN:     ${{ secrets.BACKDROP_GITHUB_TOKEN }}
       GITHUB_REPO:      ${{ secrets.BACKDROP_GITHUB_REPO }}      # e.g. yourname/my-backdrops
       GITHUB_BRANCH:    ${{ vars.BACKDROP_BRANCH || 'main' }}
-      GITHUB_FILE_PATH: ${{ vars.BACKDROP_FILE_PATH || 'Backdrops' }}
+      GITHUB_FILE_PATH: ${{ vars.BACKDROP_FILE_PATH || 'backdrop/backdrop.png' }}
+      BACKDROP_WIDTH:   ${{ vars.BACKDROP_WIDTH  || '1920' }}
+      BACKDROP_HEIGHT:  ${{ vars.BACKDROP_HEIGHT || '1080' }}
+      HEADLESS:         "true"
 
     steps:
       # -----------------------------------------------------------------------
