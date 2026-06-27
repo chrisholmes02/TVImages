@@ -54,3 +54,13 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Generate backdrop & upload to GitHub
         run: python generate_backdrop.py
+
+      # -----------------------------------------------------------------------
+      # 6. (Optional) Upload the PNG as a workflow artifact for easy inspection
+      # -----------------------------------------------------------------------
+      - name: Save backdrop as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backdrop-${{ github.run_id }}
+          path: backdrop.png
+          retention-days: 14
