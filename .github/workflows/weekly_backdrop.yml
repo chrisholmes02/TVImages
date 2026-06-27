@@ -15,10 +15,9 @@ jobs:
       # ---------------------------------------------------------------------------
       # Set these in your repository Settings → Secrets and variables → Actions
       # ---------------------------------------------------------------------------
-      GITHUB_TOKEN:     "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" 
-      #${{ secrets.BACKDROP_GITHUB_TOKEN }}
+      GITHUB_TOKEN:      ${{ secrets.BACKDROP_GITHUB_TOKEN }}
       #GITHUB_REPO:      ${{ secrets.BACKDROP_GITHUB_REPO }}      # e.g. yourname/my-backdrops
-      GITHUB_BRANCH:    ${{ vars.BACKDROP_BRANCH || 'main' }}
+      GITHUB_BRANCH:     ${{ vars.BACKDROP_BRANCH || 'main' }}
       #GITHUB_FILE_PATH: ${{ vars.BACKDROP_FILE_PATH || 'backdrop/backdrop.png' }}
       #BACKDROP_WIDTH:   ${{ vars.BACKDROP_WIDTH  || '1920' }}
       #BACKDROP_HEIGHT:  ${{ vars.BACKDROP_HEIGHT || '1080' }}
