@@ -19,8 +19,8 @@ import time
 # Configuration (read from environment with sane defaults)
 # ---------------------------------------------------------------------------
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
-GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "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")
-GITHUB_REPO     = os.environ.get("GITHUB_REPO", "chrisholmes02/TVImages")            # owner/repo
+GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_REPO     = os.environ.get("GITHUB_REPO", "")            # owner/repo
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = ""
 TMDB_KEY        = os.environ.get("TMDB_KEY", "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0")
