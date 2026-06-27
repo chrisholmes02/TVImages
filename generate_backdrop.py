@@ -40,8 +40,8 @@ GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO     = "chrisholmes02/TVImages" # os.environ.get("GITHUB_REPO", "")            # owner/repo
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
-TMDB_KEY        = os.environ.get("TMDB_KEY", "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0")
-TRAKT_KEY       = os.environ.get("TRAKT_KEY", "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d")
+TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
+TRAKT_KEY       = "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d"
 LOCAL_OUTPUT    = ""
 bytes           = b""
 
@@ -594,7 +594,7 @@ def upload_to_github(png_bytes: bytes, path: str = LOCAL_OUTPUT) -> None:
     if sha:
         payload["sha"] = sha
 
-    print(f"         3. Pushing to GitHub ({GITHUB_REPO} / {GITHUB_FILE}) … ", end="")
+    print(f"         3. Pushing to GitHub ({GITHUB_REPO}/{GITHUB_FILE}) … ", end="")
     put_resp = requests.put(api_base, headers=headers, data=json.dumps(payload))
 
     if put_resp.status_code in (200, 201):
