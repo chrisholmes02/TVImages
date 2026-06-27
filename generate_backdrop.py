@@ -16,6 +16,22 @@ import json
 import time
 
 # ---------------------------------------------------------------------------
+# Dependency check
+# ---------------------------------------------------------------------------
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+except ImportError:
+    sys.exit(
+        "playwright is not installed.\n"
+        "Run:  pip install playwright && playwright install chromium"
+    )
+
+try:
+    import requests
+except ImportError:
+    sys.exit("requests is not installed.\nRun:  pip install requests")
+
+# ---------------------------------------------------------------------------
 # Configuration (read from environment with sane defaults)
 # ---------------------------------------------------------------------------
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
