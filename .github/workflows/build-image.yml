@@ -1,0 +1,34 @@
+name: Build & Push Docker Image
+
+on:
+  push:
+    paths:
+      - "Dockerfile"       # only rebuild when the Dockerfile actually changes
+  workflow_dispatch:       # or manually trigger from the Actions UI
+
+jobs:
+  build-and-push:
+    name: Build image and push to ghcr.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write      # needed to push to ghcr.io
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}   # built-in, no extra secret needed
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # Image name = ghcr.io/owner/repo:latest  (all lowercase, GitHub enforces this)
+          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest

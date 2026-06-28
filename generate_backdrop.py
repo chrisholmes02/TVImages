@@ -535,7 +535,6 @@ def generate_backdrops():
         save_locally(png_bytes, LOCAL_OUTPUT)
         upload_to_github(png_bytes, LOCAL_OUTPUT) 
 
-
 # Extracts the canvas image data from the page and decodes it into bytes
 def extract_canvas_image(canvas_data: str):
     global png_bytes

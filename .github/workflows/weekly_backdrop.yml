@@ -11,6 +11,13 @@ jobs:
     name: Generate Backdrop & Push to Repo
     runs-on: ubuntu-latest
 
+    # Pull the pre-built image — no pip/playwright install needed
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
     env:
       # ---------------------------------------------------------------------------
       # Set these in your repository Settings → Secrets and variables → Actions
@@ -19,36 +26,15 @@ jobs:
 
 
     steps:
-      # -----------------------------------------------------------------------
-      # 1. Check out THIS repository (the one holding the workflow + script)
-      # -----------------------------------------------------------------------
-      - name: Checkout workflow repo
+      - name: Checkout repo
         uses: actions/checkout@v4
-
-      # -----------------------------------------------------------------------
-      # 2. Set up Python
-      # -----------------------------------------------------------------------
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      # -----------------------------------------------------------------------
-      # 3. Install Python dependencies
-      # -----------------------------------------------------------------------
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install playwright requests
-
-      # -----------------------------------------------------------------------
-      # 4. Install Playwright browser (Chromium only, smaller footprint)
-      # -----------------------------------------------------------------------
-      - name: Install Playwright Chromium
-        run: playwright install --with-deps chromium
-
-      # -----------------------------------------------------------------------
-      # 5. Run the generator script
-      # -----------------------------------------------------------------------
+ 
       - name: Generate backdrop & upload to GitHub
         run: python generate_backdrop.py
+ 
+      - name: Save backdrop as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backdrop-${{ github.run_id }}
+          path: backdrop.png
+          retention-days: 14
