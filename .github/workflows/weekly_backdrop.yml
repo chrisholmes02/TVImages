@@ -16,12 +16,7 @@ jobs:
       # Set these in your repository Settings → Secrets and variables → Actions
       # ---------------------------------------------------------------------------
       GITHUB_TOKEN:      ${{ secrets.BACKDROP_GITHUB_TOKEN }}
-      #GITHUB_REPO:      ${{ secrets.BACKDROP_GITHUB_REPO }}      # e.g. yourname/my-backdrops
-      GITHUB_BRANCH:     ${{ vars.BACKDROP_BRANCH || 'main' }}
-      #GITHUB_FILE_PATH: ${{ vars.BACKDROP_FILE_PATH || 'backdrop/backdrop.png' }}
-      #BACKDROP_WIDTH:   ${{ vars.BACKDROP_WIDTH  || '1920' }}
-      #BACKDROP_HEIGHT:  ${{ vars.BACKDROP_HEIGHT || '1080' }}
-      #HEADLESS:         "true"
+
 
     steps:
       # -----------------------------------------------------------------------
@@ -57,13 +52,3 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Generate backdrop & upload to GitHub
         run: python generate_backdrop.py
-
-      # -----------------------------------------------------------------------
-      # 6. (Optional) Upload the PNG as a workflow artifact for easy inspection
-      # -----------------------------------------------------------------------
-      - name: Save backdrop as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backdrop-${{ github.run_id }}
-          path: backdrop.png
-          retention-days: 14
