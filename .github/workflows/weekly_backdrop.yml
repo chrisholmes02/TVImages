@@ -13,7 +13,7 @@ jobs:
 
     # Pull the pre-built image — no pip/playwright install needed
     container:
-      image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+      image: ghcr.io/chrisholmes02/tvimages:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
