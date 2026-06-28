@@ -10,10 +10,11 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 libx11-xcb1 libxcb-dri3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-RUN pip install --no-cache-dir playwright requests
+# Pin playwright so the Python package and browser binary always match
+RUN pip install --no-cache-dir "playwright==1.49.0" requests
 
-# Install Chromium browser (only Chromium, not Firefox/WebKit)
-RUN playwright install chromium
+# Install Chromium + all its system dependencies in one step
+# --with-deps ensures no version mismatch between the library and browser
+RUN playwright install --with-deps chromium
 
 WORKDIR /app
