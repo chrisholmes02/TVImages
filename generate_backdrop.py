@@ -49,6 +49,8 @@ bytes           = b""
 def generate_backdrops():
     global png_bytes, bytes, LOCAL_OUTPUT
 
+    print(f"Backdrop token: {GITHUB_TOKEN}")
+
     print("1. Opening Chromium browser in headless session")
     
     with sync_playwright() as p:
