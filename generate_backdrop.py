@@ -566,7 +566,7 @@ def upload_to_github(png_bytes: bytes, path: str = LOCAL_OUTPUT) -> None:
         "X-GitHub-Api-Version": "2022-11-28",
     }
 
-    date_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     commit_message = f"chore: weekly backdrop update ({date_str})"
     encoded_content = base64.b64encode(png_bytes).decode()
 
