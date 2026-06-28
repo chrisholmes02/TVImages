@@ -36,7 +36,7 @@ except ImportError:
 # Configuration (read from environment with sane defaults)
 # ---------------------------------------------------------------------------
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
-GITHUB_TOKEN    = "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" #os.environ.get("BACKDROP_GITHUB_TOKEN", "")
+GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "") # "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" 
 GITHUB_REPO     = "chrisholmes02/TVImages"
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
