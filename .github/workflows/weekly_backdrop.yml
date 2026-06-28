@@ -29,6 +29,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
  
+      - name: Ensure playwright and requests are available
+        run: pip install --no-cache-dir "playwright==1.49.0" requests
+
       - name: Generate backdrop & upload to GitHub
         run: python generate_backdrop.py
  
