@@ -15,7 +15,7 @@ jobs:
       # ---------------------------------------------------------------------------
       # Set these in your repository Settings → Secrets and variables → Actions
       # ---------------------------------------------------------------------------
-      BACKDROP_TOKEN:     ${{ secrets. BACKDROP_TOKEN }}
+      BACKDROP_TOKEN:     ${{ secrets.BACKDROP_GITHUB_TOKEN }}
 
     steps:
       # -----------------------------------------------------------------------
