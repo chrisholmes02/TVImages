@@ -432,11 +432,11 @@ def generate_backdrops():
         save_locally(png_bytes, LOCAL_OUTPUT)
         upload_to_github(png_bytes, LOCAL_OUTPUT) 
 
-    ## Generate 'Romance' backdrop.
-        GENRE = "Romance"
+    ## Generate 'Science Fiction' backdrop.
+        GENRE = "Science Fiction"
         print(f"   A. Generating backdrop for '{GENRE}'")
 
-        # Find any <option> element with text "Romance"
+        # Find any <option> element with text "Science Fiction"
         option = page.locator("option", has_text=GENRE)
     
         # Get the parent <select> and select it
