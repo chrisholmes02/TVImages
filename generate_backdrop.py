@@ -20,7 +20,6 @@ import time
 # ---------------------------------------------------------------------------
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-    print("Playwright sync")
 except ImportError:
     sys.exit(
         "playwright is not installed.\n"
@@ -36,7 +35,7 @@ except ImportError:
 # Configuration (read from environment with sane defaults)
 # ---------------------------------------------------------------------------
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
-GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "") 
+GITHUB_TOKEN    = os.environ.get("BACKDROP_TOKEN", "") 
 GITHUB_REPO     = "chrisholmes02/TVImages"
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
