@@ -1,0 +1,77 @@
+name: Weekly Backdrop Generator
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:   # allows manual trigger from the GitHub UI
+
+jobs:
+  generate-and-upload:
+    name: Generate Backdrop & Push to Repo
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # built-in, no setup needed
+
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+ 
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+ 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+ 
+      - name: Install Playwright Chromium browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium
+ 
+      - name: Install Chromium system dependencies
+        run: playwright install-deps chromium
+
+
+"""
+      # -----------------------------------------------------------------------
+      # 3. Install Python dependencies
+      # -----------------------------------------------------------------------
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install playwright requests
+
+      # -----------------------------------------------------------------------
+      # 4. Install Playwright browser (Chromium only, smaller footprint)
+      # -----------------------------------------------------------------------
+      - name: Install Playwright Chromium
+        run: playwright install --with-deps chromium
+
+      # -----------------------------------------------------------------------
+      # 5. Run the generator script
+      # -----------------------------------------------------------------------
+      - name: Generate backdrop & upload to GitHub
+        run: python generate_backdrop.py
+
+"""
