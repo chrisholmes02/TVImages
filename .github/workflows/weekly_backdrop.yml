@@ -18,10 +18,11 @@ jobs:
       - name: Checkout workflow repo
         uses: actions/checkout@v7
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.16
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.16"
+          cache: "pip"
 
       - name: Cache pip packages
         uses: actions/cache@v4
