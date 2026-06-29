@@ -609,6 +609,10 @@ def main():
     print("  Nuvio Backdrop Generator - Weekly Automation")
     print("=" * 60, "\n")
 
+    ################################
+    sys.exit()
+    ################################
+    
     generate_backdrops()
 
     print("3. Done Successfully!")

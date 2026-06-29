@@ -12,27 +12,48 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # ---------------------------------------------------------------------------
-      # Set these in your repository Settings → Secrets and variables → Actions
-      # ---------------------------------------------------------------------------
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # built-in, no setup needed
 
     steps:
-      # -----------------------------------------------------------------------
-      # 1. Check out THIS repository (the one holding the workflow + script)
-      # -----------------------------------------------------------------------
       - name: Checkout workflow repo
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # 2. Set up Python
-      # -----------------------------------------------------------------------
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+ 
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+ 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+ 
+      - name: Install Playwright Chromium browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium
+ 
+      - name: Install Chromium system dependencies
+        run: playwright install-deps chromium
+
+
+"""
       # -----------------------------------------------------------------------
       # 3. Install Python dependencies
       # -----------------------------------------------------------------------
@@ -53,12 +74,4 @@ jobs:
       - name: Generate backdrop & upload to GitHub
         run: python generate_backdrop.py
 
-      # -----------------------------------------------------------------------
-      # 6. (Optional) Upload the PNG as a workflow artifact for easy inspection
-      # -----------------------------------------------------------------------
-      - name: Save backdrop as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backdrop-${{ github.run_id }}
-          path: backdrop.png
-          retention-days: 14
+"""
