@@ -53,25 +53,3 @@ jobs:
         run: playwright install-deps chromium
 
 
-"""
-      # -----------------------------------------------------------------------
-      # 3. Install Python dependencies
-      # -----------------------------------------------------------------------
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install playwright requests
-
-      # -----------------------------------------------------------------------
-      # 4. Install Playwright browser (Chromium only, smaller footprint)
-      # -----------------------------------------------------------------------
-      - name: Install Playwright Chromium
-        run: playwright install --with-deps chromium
-
-      # -----------------------------------------------------------------------
-      # 5. Run the generator script
-      # -----------------------------------------------------------------------
-      - name: Generate backdrop & upload to GitHub
-        run: python generate_backdrop.py
-
-"""
