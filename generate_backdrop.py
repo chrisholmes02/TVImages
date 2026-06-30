@@ -5,7 +5,7 @@ v1.0
 By Chris Holmes
 
 Runs a script that uses Playwright to automate the Nuvio Backdrop Generator web app, generating backdrops for various categories
-and uploading them to a my GitHub repository.
+and uploading them to my GitHub repository.
 """
 
 import os
@@ -30,10 +30,8 @@ try:
 except ImportError:
     sys.exit("requests is not installed.\nRun:  pip install requests")
 
-# Configuration (read from environment with sane defaults)
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
-GITHUB_REPO     = "chrisholmes02/TVImages"
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
@@ -73,7 +71,6 @@ def generate_backdrops():
 
         capture_canvas_and_upload(page, "Backdrop_New_Movies.png")
 
-
 # Capture the canvas image data, save it locally, and upload it to GitHub
 def capture_canvas_and_upload(page, path):
     # Locate image data from the canvas element
@@ -88,6 +85,9 @@ def capture_canvas_and_upload(page, path):
         header, encoded = canvas_data.split(",", 1)
         png_bytes = base64.b64decode(encoded)
         print(f"      a. Extracted canvas image ({len(png_bytes):,} bytes)")
+    else:
+        print("✗ Failed to extract canvas image data")
+        sys.exit(1) 
 
     # Save the image locally
     with open(path, "wb") as f:
@@ -119,7 +119,6 @@ def capture_canvas_and_upload(page, path):
     elif resp.status_code == 404:
         print("         2. File does not exist yet – will create")
     else:
-        print(f"⚠  Unexpected status {resp.status_code} checking file existence.")
         print(f"✗  GitHub API error {resp.status_code}: {resp.text}")
         sys.exit(1)
 
@@ -141,7 +140,7 @@ def capture_canvas_and_upload(page, path):
         if commit_url:
             print(f"         4. Commit: {commit_url}")
     else:
-        print(f"  ✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
+        print(f"✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
         sys.exit(1)
 
 def main():
