@@ -26,16 +26,14 @@ except ImportError:
         "Run:  pip install playwright && playwright install chromium"
     )
 
-
-### Try not needed now as not uplpading to GitHub. This speeds load time. Remove comment if needed again.
-"""try:
+try:
     import requests
 except ImportError:
-    sys.exit("requests is not installed.\nRun:  pip install requests") """
+    sys.exit("requests is not installed.\nRun:  pip install requests")
 
 # Environment variables
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
-GITHUB_TOKEN    = ""#os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
@@ -218,7 +216,6 @@ def generate_backdrops():
         parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="War (195) · garycrawfordgc")
         generate_backdrop_add_to_Nuvio(page, collection)
 
-
     ## Generating 'Romance' backdrop
         collection = "Romance"
         print(f"   T. Generating backdrop for '{collection}' ... ", end="")
@@ -254,10 +251,6 @@ def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Save to Nuvio").click(trial=True) #Wait for button to be enabled again, this means process finished
     page.get_by_role("button", name="Close").click() #Close the success message
     print("saved to Nuvio")
-
-    ### --No longer need this but saving in case I want to use it for other projects. 
-    ### --The website has built in Nuvio GitHub upload functionality now.
-    ### capture_canvas_and_upload(page, "Backdrop_New_Movies.png")
 
 ### Capture the canvas image data, save it locally, and upload it to GitHub
 ### --This possibly doesn't need to be used any longer. Website has built in Nuvio GitHub upload functionality now
