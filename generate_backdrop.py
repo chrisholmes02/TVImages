@@ -33,7 +33,7 @@ except ImportError:
 
 # Environment variables
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
-GITHUB_TOKEN    = ""#os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
@@ -45,7 +45,7 @@ def generate_backdrops():
 
     # Open a Playwright browser and navigate to the generator URL    
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
