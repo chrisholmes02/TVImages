@@ -61,7 +61,7 @@ def generate_backdrops():
         # Login to Nuvio
         page.get_by_role("button", name="Settings").click()
         page.get_by_role("button", name="Sign in with Nuvio").click()
-        page.get_by_placeholder("you@example.com").fill("chris.holmes02@gmail.com")
+        page.get_by_placeholder("you@example.com").fill("chrisholmes02@gmail.com")
         page.get_by_placeholder("••••••••").fill("08161983zZ!")
         page.get_by_role("button", name="Sign In").click()
         time.sleep(0.5)  # Wait for the login to complete
