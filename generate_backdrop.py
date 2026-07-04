@@ -9,12 +9,18 @@ Function remains to upload files as originall intended. However new functionalit
 directly into Nuvio. This script will be using that flow instead.
 """
 
-import os
+import getpass
 import sys
 import base64
 import datetime
 import json
 import time
+import getpass
+import json
+from copy import deepcopy
+from datetime import date
+
+import requests
 
 
 # Dependency check
@@ -36,45 +42,71 @@ GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
+
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
 MDBLIST_KEY     = "yiuz1vhq6o16wxv4o2y7km8xw"
 TRAKT_KEY       = "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d"
 
+BASE_URL        = "https://api.nuvio.tv"
+AUTH_URL        = f"{BASE_URL}/auth/v1"
+REST_URL        = f"{BASE_URL}/rest/v1"
+PUBLISHABLE_KEY = "sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN"
+NUVIO_EMAIL     = "chris.holmes02@gmail.com"
+NUVIO_PASSWORD  = "08161983zZ!"
+PROFILE_ID      = 1                  # Profile index (1-6)
+FOLDER_NAME     = "Sci-Fi"          # Folder title to update (must match exactly one folder)
+BACKDROP_URL    = "https://cdn.example.com/backdrops/scifi.jpg"  # or "clear" to remove
+
+
 # Main function to generate backdrops using the Nuvio Backdrop Generator
 def generate_backdrops():
 
+    # Sign into Nuvio API and get access token
+    print(f"1. Logging into Nuvio with {NUVIO_EMAIL} ... ", end="")
+    #client = NuvioClient(NUVIO_EMAIL, NUVIO_PASSWORD)
+    print("login successful")
+
     # Open a Playwright browser and navigate to the generator URL    
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        print("2. Opening Chromium browser in headless session")
+        
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
 
-        print(f"2. Navigating to {GENERATOR_URL}")
+        print(f"3. Navigating to {GENERATOR_URL}")
         page.goto(GENERATOR_URL, wait_until="networkidle", timeout=60_000)
 
-        print("3. Signing into Nuvio and setting API keys")
+        print("4. Setting API keys and selecting posters")
         # Fill in API keys
         page.locator("#tmdbKey").fill(TMDB_KEY)
         page.locator("#traktKey").fill(TRAKT_KEY)
         page.locator("#mdblistKey").fill(MDBLIST_KEY)
 
-        # Login to Nuvio
+        """ Login to Nuvio NOTE functionality broken on website. 
+        Using Nuvio API to push backdrop directly into Nuvio.
         page.get_by_role("button", name="Settings").click()
         page.get_by_role("button", name="Sign in with Nuvio").click()
         page.get_by_placeholder("you@example.com").fill("chrisholmes02@gmail.com")
         page.get_by_placeholder("••••••••").fill("08161983zZ!")
         page.get_by_role("button", name="Sign In").click()
         time.sleep(0.5)  # Wait for the login to complete
-
+        """
         # Select 'Posters'. This setting never changes
         page.get_by_text("Posters").click()
         
     ## Generate 'New Movies' backdrop
         collection = "New Movies"
-        print(f"↳  A. Generating backdrop for '{collection}' ... ", end="")
+        print(f"↳  A. Generating backdrop for '{collection}'")
         page.get_by_role("button", name="Trakt").click()
+
+        page.get_by_role("button", name="Popular on Trakt", exact=True).click()
+        page.get_by_text("URL", exact=True).click()
         page.get_by_placeholder("https://trakt.tv/users/username/lists/listname").fill("https://app.trakt.tv/users/giladg/lists/latest-releases?mode=movie")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        capture_canvas_and_upload(page, collection)
+        
+        sys.exit()
 
     ## Generate 'Trending' backdrop
         collection = "Trending"
@@ -256,6 +288,12 @@ def generate_backdrop_add_to_Nuvio(page, collection):
 ### --This possibly doesn't need to be used any longer. Website has built in Nuvio GitHub upload functionality now
 ### --but leaving this in for now in case I want to use it for other projects.
 def capture_canvas_and_upload(page, path):
+    # 2. Build the new filename: "New Movies <today's date>.<ext>"
+    path = f"Backdrop - {path} " + datetime.date.today().strftime("%Y-%m-%d") + ".png"
+
+    page.get_by_role("button", name="Generate Backdrop").click()
+    page.get_by_role("button", name="Download").click(trial=True) #Wait for button to be enabled again, this means process finished
+    
     # Locate image data from the canvas element
     canvas_data: str = page.evaluate("""() => {
         const canvas = document.querySelector('canvas');
@@ -326,12 +364,56 @@ def capture_canvas_and_upload(page, path):
         print(f"✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
         sys.exit(1)
 
+
+class NuvioClient:
+    def __init__(self, email: str, password: str):
+        self.session = requests.Session()
+        self.session.headers.update({"apikey": PUBLISHABLE_KEY})
+        self.access_token = None
+        self._sign_in(email, password)
+
+    def _sign_in(self, email: str, password: str):
+        resp = self.session.post(
+            f"{AUTH_URL}/token",
+            params={"grant_type": "password"},
+            json={"email": email, "password": password},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        self.access_token = data["access_token"]
+        self.session.headers.update({"Authorization": f"Bearer {self.access_token}"})
+
+    def _rpc(self, function_name: str, payload=None):
+        resp = self.session.post(f"{REST_URL}/rpc/{function_name}", json=payload or {})
+        if resp.status_code >= 400:
+            try:
+                detail = resp.json()
+            except ValueError:
+                detail = resp.text
+            raise RuntimeError(f"{function_name} failed ({resp.status_code}): {detail}")
+        if resp.status_code == 204 or not resp.content:
+            return None
+        return resp.json()
+
+    def pull_collections(self, profile_id: int) -> list:
+        """Returns the raw collections_json array for a profile (empty list if none)."""
+        result = self._rpc("sync_pull_collections", {"p_profile_id": profile_id})
+        if not result:
+            return []
+        # sync_pull_collections returns a list with one row (or empty)
+        return result[0]["collections_json"] if result else []
+
+    def push_collections(self, profile_id: int, collections: list):
+        """Full replace of the collections array for a profile."""
+        self._rpc(
+            "sync_push_collections",
+            {"p_profile_id": profile_id, "p_collections_json": collections},
+        )
+        
 def main():
     print("=" * 60)
     print("  Nuvio Backdrop Image Generator - Weekly Automation")
     print("=" * 60, "\n")
-
-    print("1. Opening Chromium browser in headless session")
     
     generate_backdrops()
 
