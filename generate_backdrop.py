@@ -19,6 +19,7 @@ import getpass
 import json
 from copy import deepcopy
 from datetime import date
+from wsgiref import headers
 
 import requests
 
@@ -38,15 +39,18 @@ except ImportError:
     sys.exit("requests is not installed.\nRun:  pip install requests")
 
 # Environment variables
+# GitHub
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 
+#Website
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
 MDBLIST_KEY     = "yiuz1vhq6o16wxv4o2y7km8xw"
 TRAKT_KEY       = "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d"
 
+#Nuvio
 BASE_URL        = "https://api.nuvio.tv"
 AUTH_URL        = f"{BASE_URL}/auth/v1"
 REST_URL        = f"{BASE_URL}/rest/v1"
@@ -284,11 +288,9 @@ def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Close").click() #Close the success message
     print("saved to Nuvio")
 
-### Capture the canvas image data, save it locally, and upload it to GitHub
-### --This possibly doesn't need to be used any longer. Website has built in Nuvio GitHub upload functionality now
-### --but leaving this in for now in case I want to use it for other projects.
+# Capture the canvas image data, save it locally, remove last weeks versions and upload it to GitHub
 def capture_canvas_and_upload(page, path):
-    # 2. Build the new filename: "New Movies <today's date>.<ext>"
+    # Set the filename with today's date
     path = f"Backdrop - {path} " + datetime.date.today().strftime("%Y-%m-%d") + ".png"
 
     page.get_by_role("button", name="Generate Backdrop").click()
@@ -314,7 +316,7 @@ def capture_canvas_and_upload(page, path):
     with open(path, "wb") as f:
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
-
+    
     # Uploads the image to GitHub using the GitHub API
     GITHUB_FILE = "Backdrops/" + path
     print(f"      c. Uploading to GitHub using API Token credentials")
@@ -325,6 +327,17 @@ def capture_canvas_and_upload(page, path):
         "Accept":        "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
+
+    resp = requests.get(f"https://api.github.com/repos/chrisholmes02/TVImages/git/trees/{GITHUB_BRANCH}?recursive=1", headers=headers, params={"ref": GITHUB_BRANCH})
+    resp.raise_for_status()
+    tree = resp.json().get("tree", [])
+    files_list = [item["path"] for item in tree if item["type"] == "blob"]
+    matches = [f for f in files_list if path.lower() in f.lower()]
+
+    if len(matches) > 0:
+        print(f"      d. Found existing files matching '{path}': {matches}")
+
+    sys.exit()
 
     date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     commit_message = f"chore: weekly backdrop update ({date_str})"
@@ -363,6 +376,7 @@ def capture_canvas_and_upload(page, path):
     else:
         print(f"✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
         sys.exit(1)
+
 
 
 class NuvioClient:
