@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
 Weekly Backdrop Generator Automation Script
-v1.0
+v1.1
 By Chris Holmes
-
-Original script would generate backdrop, extract image data and upload as PNG to GitHub. Website was changed mid-build.
-Function remains to upload files as originall intended. However new functionality has been added that automaticlly adds backdrop
-directly into Nuvio. This script will be using that flow instead.
+7/4/2026
 """
 
 import os
@@ -14,38 +11,19 @@ import sys
 import base64
 import datetime
 import json
-import time
-import getpass
-import json
-from copy import deepcopy
-from datetime import date
-from wsgiref import headers
-
 import requests
 
-
-# Dependency check
-try:
-    from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-except ImportError:
-    sys.exit(
-        "playwright is not installed.\n"
-        "Run:  pip install playwright && playwright install chromium"
-    )
-
-try:
-    import requests
-except ImportError:
-    sys.exit("requests is not installed.\nRun:  pip install requests")
+from copy import deepcopy
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 # Environment variables
 # GitHub
-GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 
 #Website
+GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
 MDBLIST_KEY     = "yiuz1vhq6o16wxv4o2y7km8xw"
 TRAKT_KEY       = "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d"
@@ -57,9 +35,9 @@ REST_URL        = f"{BASE_URL}/rest/v1"
 PUBLISHABLE_KEY = "sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN"
 NUVIO_EMAIL     = "chris.holmes02@gmail.com"
 NUVIO_PASSWORD  = "08161983zZ!"
-PROFILE_ID      = 1                  # Profile index (1-6)
-FOLDER_NAME     = "Sci-Fi"          # Folder title to update (must match exactly one folder)
-BACKDROP_URL    = "https://cdn.example.com/backdrops/scifi.jpg"  # or "clear" to remove
+PROFILE_ID      = ""
+FOLDER_NAME     = ""
+BACKDROP_URL    = ""
 
 
 # Main function to generate backdrops using the Nuvio Backdrop Generator
@@ -67,8 +45,8 @@ def generate_backdrops():
 
     # Sign into Nuvio API and get access token
     print(f"1. Logging into Nuvio with {NUVIO_EMAIL} ... ", end="")
-    #client = NuvioClient(NUVIO_EMAIL, NUVIO_PASSWORD)
-    print("login successful")
+    client = NuvioClient(NUVIO_EMAIL, NUVIO_PASSWORD)
+    print("login successfully")
 
     # Open a Playwright browser and navigate to the generator URL    
     with sync_playwright() as p:
@@ -108,176 +86,221 @@ def generate_backdrops():
         page.get_by_text("URL", exact=True).click()
         page.get_by_placeholder("https://trakt.tv/users/username/lists/listname").fill("https://app.trakt.tv/users/giladg/lists/latest-releases?mode=movie")
         #generate_backdrop_add_to_Nuvio(page, collection)
-        capture_canvas_and_upload(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
         
-        sys.exit()
-
     ## Generate 'Trending' backdrop
         collection = "Trending"
-        print(f"   B. Generating backdrop for '{collection}' ... ", end="")
-        page.get_by_role("button", name="TMDB Filter").click()
+        print(f"   B. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="TMDB").click()
         
         # Set language to English. This setting never changes
-        option = page.locator("option", has_text="English")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="English")
+        page.get_by_role("button", name="Any Language", exact=True).click()
+        page.get_by_text("English", exact=True).click()
+
         # Set content type to Movies & Shows. This setting stays until Genres
-        option = page.locator("option", has_text="Movies & Shows")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Movies & Shows")        
+        page.get_by_role("button", name="Movies", exact=True).click()
+        page.get_by_text("Movies & Shows", exact=True).click()
         
-        option = page.locator("option", has_text="Trending This Week")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Trending This Week")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        page.get_by_role("button", name="Popular", exact=True).click()
+        page.get_by_text("Trending This Week", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generate 'Recommended' backdrop
         collection = "Recommended"
-        print(f"   C. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Popular")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Popular")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   C. Generating backdrop for '{collection}'")
+        
+        page.get_by_role("button", name="Trending This Week", exact=True).click()
+        page.get_by_text("Popular", exact=True).click() 
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
+
 
     ## Generating 'Top Rated' backdrop
         collection = "Top Rated"
-        print(f"   D. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Top Rated")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Top Rated")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   D. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Popular", exact=True).click()
+        page.get_by_text("Top Rated", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Netflix' backdrop
         collection = "Netflix"
-        print(f"   E. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Popular")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Popular")
-        option = page.locator("option", has_text="Netflix")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Netflix")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   E. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Top Rated", exact=True).click()
+        page.get_by_text("Popular", exact=True).click()
+        page.get_by_role("button", name="Any", exact=True).click()
+        page.get_by_text("Netflix", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Prime Video' backdrop
         collection = "Prime Video"
-        print(f"   F. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Amazon Prime")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Amazon Prime")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   F. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Netflix", exact=True).click()
+        page.get_by_text("Amazon Prime", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'HBO Max' backdrop
         collection = "HBO Max"
-        print(f"   G. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="HBO Max")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="HBO Max")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   G. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Amazon Prime", exact=True).click()
+        page.get_by_text("HBO Max", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Disney+' backdrop
         collection = "Disney+"
-        print(f"   H. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Disney+")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Disney+")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   H. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="HBO Max", exact=True).click()
+        page.get_by_text("Disney+", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating Apple TV' backdrop
         collection = "Apple TV"
-        print(f"   I. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Apple TV")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Apple TV")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   I. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Disney+", exact=True).click()
+        page.get_by_text("Apple TV", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Hulu' backdrop
         collection = "Hulu"
-        print(f"   J. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Hulu")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Hulu")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   J. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Apple TV", exact=True).click()
+        page.get_by_text("Hulu", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Paramount+' backdrop
         collection = "Paramount+"
-        print(f"   K. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Paramount+")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Paramount+")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   K. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Hulu", exact=True).click()
+        page.get_by_text("Paramount+", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Starz' backdrop
         collection = "Starz"
-        print(f"   L. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Starz")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Starz")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   L. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Paramount+", exact=True).click()
+        page.get_by_text("Starz", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Action' backdrop
         collection = "Action"
-        print(f"   M. Generating backdrop for '{collection}' ... ", end="")
+        print(f"   M. Generating backdrop for '{collection}'")
         page.get_by_role("button", name="MDBList").click()
-        option = page.locator("option", has_text="Top lists")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Top lists")
-        option = page.locator("option", has_text="Action (400) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Action (400) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        page.get_by_role("button", name="URL", exact=True).click()
+        page.get_by_text("Top lists", exact=True).click()
+        page.get_by_role("button", name="— choose a list —", exact=True).click()
+        page.get_by_text("Action (400) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Comedy' backdrop
         collection = "Comedy"
-        print(f"   N. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Comedy (400) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Comedy (400) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   N. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Action (400) · garycrawfordgc", exact=True).click()
+        page.get_by_text("Comedy (400) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Crime' backdrop
         collection = "Crime"
-        print(f"   O. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Crime (400) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Crime (400) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   O. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Comedy (400) · garycrawfordgc", exact=True).click()
+        page.get_by_text("Crime (400) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Drama' backdrop
         collection = "Drama"
-        print(f"   P. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Drama (400) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Drama (400) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   P. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Crime (400) · garycrawfordgc", exact=True).click()
+        page.get_by_text("Drama (400) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path =capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Thriller' backdrop
         collection = "Thriller"
-        print(f"   Q. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Thriller (400) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Thriller (400) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   Q. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Drama (400) · garycrawfordgc", exact=True).click()
+        page.get_by_text("Thriller (400) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Sci-Fi' backdrop
         collection = "Sci-Fi"
-        print(f"   R. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Sci-Fi (280) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Sci-Fi (280) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   R. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Thriller (400) · garycrawfordgc", exact=True).click()
+        page.get_by_text("Sci-Fi (280) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'War Stories' backdrop
         collection = "War Stories"
-        print(f"   S. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="War (195) · garycrawfordgc")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="War (195) · garycrawfordgc")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   S. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Sci-Fi (280) · garycrawfordgc", exact=True).click()
+        page.get_by_text("War (195) · garycrawfordgc", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Romance' backdrop
         collection = "Romance"
-        print(f"   T. Generating backdrop for '{collection}' ... ", end="")
-        page.get_by_role("button", name="TMDB Filter").click()
-        option = page.locator("option", has_text="Movies")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Movies")  
-        option = page.locator("option", has_text="Netflix")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Any")     
-        option = page.locator("option", has_text="Romance")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Romance")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   T. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="TMDB").click()
+        page.get_by_role("button", name="Movies & Shows", exact=True).click()
+        page.get_by_text("Movies", exact=True).click()
+        page.get_by_role("button", name="Starz", exact=True).click()
+        page.get_by_text("Any", exact=True).click()
+        page.get_by_role("button", name="Any Genre", exact=True).click()
+        page.get_by_text("Romance", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Kids & Family' backdrop
         collection = "Kids & Family"
-        print(f"   U. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Family")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Family")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   U. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Romance", exact=True).click()
+        page.get_by_text("Family", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
     ## Generating 'Mystery' backdrop
         collection = "Mystery"
-        print(f"   V. Generating backdrop for '{collection}' ... ", end="")
-        option = page.locator("option", has_text="Mystery")
-        parent_select = page.locator("select").filter(has=option); parent_select.select_option(label="Mystery")
-        generate_backdrop_add_to_Nuvio(page, collection)
+        print(f"   V. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Family", exact=True).click()
+        page.get_by_text("Mystery", exact=True).click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
+### Generates backdrop and saves to collections with inernal Nuvio API. NOTE Possibly broken due to website changes.
 def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Generate Backdrop").click()
     page.get_by_role("button", name="Save to Collection").click()
@@ -291,8 +314,9 @@ def generate_backdrop_add_to_Nuvio(page, collection):
 # Capture the canvas image data, save it locally, remove last weeks versions and upload it to GitHub
 def capture_canvas_and_upload(page, path):
     # Set the filename with today's date
+    path_collection = "Backdrop - " + path
     path = f"Backdrop - {path} " + datetime.date.today().strftime("%Y-%m-%d") + ".png"
-
+    
     page.get_by_role("button", name="Generate Backdrop").click()
     page.get_by_role("button", name="Download").click(trial=True) #Wait for button to be enabled again, this means process finished
     
@@ -321,29 +345,39 @@ def capture_canvas_and_upload(page, path):
     GITHUB_FILE = "Backdrops/" + path
     print(f"      c. Uploading to GitHub using API Token credentials")
 
-    api_base = f"https://api.github.com/repos/chrisholmes02/TVImages/contents/{GITHUB_FILE}"
+    #api_base = f"https://api.github.com/repos/chrisholmes02/TVImages/contents/{GITHUB_FILE}"
+    api_base = "https://api.github.com/repos/chrisholmes02/TVImages" #contents/{GITHUB_FILE}"
     headers  = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept":        "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
 
-    resp = requests.get(f"https://api.github.com/repos/chrisholmes02/TVImages/git/trees/{GITHUB_BRANCH}?recursive=1", headers=headers, params={"ref": GITHUB_BRANCH})
+    # Checking for existing files in the repository that match the collection name (case-insensitive) and deleting them
+    print(f"         1. Checking existing backdrop file with name containing '{path_collection}'", end="")
+    resp = requests.get(f"{api_base}/git/trees/{GITHUB_BRANCH}?recursive=1", headers=headers, params={"ref": GITHUB_BRANCH})
     resp.raise_for_status()
     tree = resp.json().get("tree", [])
     files_list = [item["path"] for item in tree if item["type"] == "blob"]
-    matches = [f for f in files_list if path.lower() in f.lower()]
+    matches = [f for f in files_list if path_collection.lower() in f.lower()]
 
-    if len(matches) > 0:
-        print(f"      d. Found existing files matching '{path}': {matches}")
+    sha = None
+    if not matches:
+        print(" ... no matching files found")
+    elif len(matches) > 0: # Found file, now deleting it
+        print(f"\n            - found {len(matches)} matching file(s): {matches} and deleting")
 
-    sys.exit()
+        resp = requests.get(api_base + f"/contents/{matches[0]}", headers=headers, params={"ref": GITHUB_BRANCH})
+        sha = resp.json()["sha"]
+        payload = {"message": f"Delete {matches[0]}", "sha": sha, "branch": GITHUB_BRANCH}
+        resp = requests.delete(f"{api_base}/contents/{matches[0]}", headers=headers, json=payload, params={"ref": GITHUB_BRANCH})
 
+    # Create a commit message with the current date and prepare the payload for the GitHub API request
     date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     commit_message = f"chore: weekly backdrop update ({date_str})"
     encoded_content = base64.b64encode(png_bytes).decode()
 
-    # Check if the file already exists (we need its SHA to update it)
+    """ # Check if the file already exists (we need its SHA to update it)
     sha = None
     print(f"         1. Checking existing file at chrisholmes02/TVImages/{GITHUB_FILE}")
     resp = requests.get(api_base, headers=headers, params={"ref": GITHUB_BRANCH})
@@ -354,7 +388,7 @@ def capture_canvas_and_upload(page, path):
         print("         2. File does not exist yet – will create")
     else:
         print(f"✗  GitHub API error {resp.status_code}: {resp.text}")
-        sys.exit(1)
+        sys.exit(1)"""
 
     payload: dict = {
         "message": commit_message,
@@ -364,21 +398,37 @@ def capture_canvas_and_upload(page, path):
     if sha:
         payload["sha"] = sha
 
-    print(f"         3. Pushing to GitHub (chrisholmes02/TVImages/{GITHUB_FILE}) … ", end="")
-    put_resp = requests.put(api_base, headers=headers, data=json.dumps(payload))
+    print(f"         2. Pushing to GitHub (chrisholmes02/TVImages/{GITHUB_FILE}) … ", end="")
+    put_resp = requests.put(api_base + f"/contents/{GITHUB_FILE}", headers=headers, data=json.dumps(payload))
 
     if put_resp.status_code in (200, 201):
-        action = "Updated" if sha else "Created"
         commit_url = put_resp.json().get("commit", {}).get("html_url", "")
-        print(f"{action} successfully")
+        print(f"created successfully")
         if commit_url:
-            print(f"         4. Commit: {commit_url}")
+            print(f"         3. Commit: {commit_url}")
     else:
         print(f"✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
         sys.exit(1)
 
+    return path
 
+#Publish the GitHub backdrop URL path to Nuvio
+def publish_collection(client, PROFILE_ID, FOLDER_NAME, BACKDROP_URL):
+    print(f"      d. Publishing backdrop to Nuvio, on Profile {PROFILE_ID} ... ", end="")
+    BACKDROP_URL = f"https://raw.githubusercontent.com/chrisholmes02/TVImages/main/Backdrops/{BACKDROP_URL}"
+    
+    current = client.pull_collections(PROFILE_ID)
+    proposed = deepcopy(current)
 
+    try:
+        set_folder_backdrop(proposed, FOLDER_NAME, BACKDROP_URL)
+    except ValueError as exc:
+        sys.exit(str(exc))
+
+    client.push_collections(PROFILE_ID, proposed)
+    print("completed successfully")
+
+# Nuvio client functions
 class NuvioClient:
     def __init__(self, email: str, password: str):
         self.session = requests.Session()
@@ -423,7 +473,38 @@ class NuvioClient:
             "sync_push_collections",
             {"p_profile_id": profile_id, "p_collections_json": collections},
         )
-        
+
+def find_folders_by_name(collections: list, folder_name: str) -> list:
+    """Returns a list of (collection, folder) tuples for every folder
+    whose title exactly matches folder_name, across all collections."""
+    matches = []
+    for c in collections:
+        for f in c.get("folders", []):
+            if f.get("title") == folder_name:
+                matches.append((c, f))
+    return matches
+
+def set_folder_backdrop(collections: list, folder_name: str, url: str) -> None:
+    """Sets (or clears, if url == 'clear') the heroBackdropUrl for the
+    folder whose title matches folder_name, in-place. Raises ValueError
+    if there isn't exactly one match."""
+    matches = find_folders_by_name(collections, folder_name)
+    if not matches:
+        raise ValueError(f"No folder titled {folder_name!r} was found.")
+    if len(matches) > 1:
+        locations = ", ".join(
+            f"collection {c.get('id')!r}" for c, _ in matches
+        )
+        raise ValueError(
+            f"Folder title {folder_name!r} is ambiguous -- found in: {locations}. "
+            "Rename one of them or match by collection instead."
+        )
+    _, folder = matches[0]
+    if url.strip().lower() == "clear":
+        folder["heroBackdropUrl"] = None
+    else:
+        folder["heroBackdropUrl"] = url
+
 def main():
     print("=" * 60)
     print("  Nuvio Backdrop Image Generator - Weekly Automation")
