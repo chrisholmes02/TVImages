@@ -70,7 +70,7 @@ def generate_backdrops():
     with sync_playwright() as p:
         print("2. Opening Chromium browser in headless session")
         
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
