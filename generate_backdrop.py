@@ -9,7 +9,7 @@ Function remains to upload files as originall intended. However new functionalit
 directly into Nuvio. This script will be using that flow instead.
 """
 
-import getpass
+import os
 import sys
 import base64
 import datetime
