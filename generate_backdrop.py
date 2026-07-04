@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Weekly Backdrop Generator Automation Script
-v1.1
+v1.0
 By Chris Holmes
 7/4/2026
 """
