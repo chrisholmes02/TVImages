@@ -338,12 +338,12 @@ def capture_canvas_and_upload(page, path):
         sys.exit(1) 
 
     # Save the image locally
-    with open(path, "wb") as f:
+    with open("_" + path, "wb") as f:
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
     
     # Shrink PNG palette to reduce file size while maintaining quality
-    shrink_png_palette(path, path)
+    shrink_png_palette("_" + path, path)
     file_size = os.path.getsize(path)
     print(f"      c. Reduced PNG palette file size ({file_size:,} bytes)")
     
