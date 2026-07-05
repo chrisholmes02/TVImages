@@ -1,3 +1,5 @@
+# Place in .github/workflows/weekly_backdrop.yml to use.
+
 name: Weekly Backdrop Generator
 
 on:
