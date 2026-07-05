@@ -337,14 +337,14 @@ def capture_canvas_and_upload(page, path):
         print("✗ Failed to extract canvas image data")
         sys.exit(1) 
 
-    # Save the image locally, prefixed with an underscore to indicate it's the original unoptimized file
-    with open("_" + path, "wb") as f:
+    # Save the image locally to a temporary file before shrinking the palette and uploading to GitHub
+    with open("temp.png", "wb") as f:
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
     
     # Shrink PNG palette to reduce file size while maintaining quality
-    shrink_png_palette("_" + path, path)
-    os.remove("_" + path)  # Remove the original unoptimized file
+    shrink_png_palette("temp.png", path)
+    os.remove("temp.png")  # Remove the original unoptimized file
     file_size = os.path.getsize(path)
     print(f"      c. Reduced PNG palette file size ({file_size:,} bytes)")
     
@@ -352,7 +352,7 @@ def capture_canvas_and_upload(page, path):
     GITHUB_FILE = "Backdrops/" + path
     print(f"      d. Uploading to GitHub using API Token credentials")
 
-    api_base = "https://api.github.com/repos/chrisholmes02/TVImages" #contents/{GITHUB_FILE}"
+    api_base = "https://api.github.com/repos/chrisholmes02/TVImages"
     headers  = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept":        "application/vnd.github+json",
