@@ -337,7 +337,7 @@ def capture_canvas_and_upload(page, path):
         print("✗ Failed to extract canvas image data")
         sys.exit(1) 
 
-    # Save the image locally
+    # Save the image locally, prefixed with an underscore to indicate it's the original unoptimized file
     with open("_" + path, "wb") as f:
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
