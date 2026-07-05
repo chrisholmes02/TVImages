@@ -15,6 +15,7 @@ import requests
 
 from copy import deepcopy
 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+from PIL import Image
 
 # Environment variables
 # GitHub
@@ -311,7 +312,7 @@ def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Close").click() #Close the success message
     print("saved to Nuvio")
 
-# Capture the canvas image data, save it locally, remove last weeks versions and upload it to GitHub
+# Capture the canvas image data, save it locally, shrink file size, remove last weeks versions and upload it to GitHub
 def capture_canvas_and_upload(page, path):
     # Set the filename with today's date
     path_collection = "Backdrop - " + path
@@ -341,11 +342,15 @@ def capture_canvas_and_upload(page, path):
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
     
+    # Shrink PNG palette to reduce file size while maintaining quality
+    shrink_png_palette(path, path)
+    file_size = os.path.getsize(path)
+    print(f"      c. Reduced PNG palette file size ({file_size:,} bytes)")
+    
     # Uploads the image to GitHub using the GitHub API
     GITHUB_FILE = "Backdrops/" + path
-    print(f"      c. Uploading to GitHub using API Token credentials")
+    print(f"      d. Uploading to GitHub using API Token credentials")
 
-    #api_base = f"https://api.github.com/repos/chrisholmes02/TVImages/contents/{GITHUB_FILE}"
     api_base = "https://api.github.com/repos/chrisholmes02/TVImages" #contents/{GITHUB_FILE}"
     headers  = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -376,19 +381,6 @@ def capture_canvas_and_upload(page, path):
     date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     commit_message = f"chore: weekly backdrop update ({date_str})"
     encoded_content = base64.b64encode(png_bytes).decode()
-
-    """ # Check if the file already exists (we need its SHA to update it)
-    sha = None
-    print(f"         1. Checking existing file at chrisholmes02/TVImages/{GITHUB_FILE}")
-    resp = requests.get(api_base, headers=headers, params={"ref": GITHUB_BRANCH})
-    if resp.status_code == 200:
-        sha = resp.json().get("sha")
-        print(f"         2. File exists (sha: {sha[:8]}…) – will update")
-    elif resp.status_code == 404:
-        print("         2. File does not exist yet – will create")
-    else:
-        print(f"✗  GitHub API error {resp.status_code}: {resp.text}")
-        sys.exit(1)"""
 
     payload: dict = {
         "message": commit_message,
@@ -504,6 +496,17 @@ def set_folder_backdrop(collections: list, folder_name: str, url: str) -> None:
         folder["heroBackdropUrl"] = None
     else:
         folder["heroBackdropUrl"] = url
+
+# Shrink PNG palette to reduce file size while maintaining quality
+def shrink_png_palette(input_path, output_path):
+    img = Image.open(input_path)
+    
+    # Use Image.Palette.ADAPTIVE instead of Image.ADAPTIVE
+    quantized_img = img.convert("P", palette=Image.Palette.ADAPTIVE, colors=256)
+    
+    # Save the optimized file
+    quantized_img.save(output_path, optimize=True)
+
 
 def main():
     print("=" * 60)
