@@ -344,6 +344,7 @@ def capture_canvas_and_upload(page, path):
     
     # Shrink PNG palette to reduce file size while maintaining quality
     shrink_png_palette("_" + path, path)
+    os.remove("_" + path)  # Remove the original unoptimized file
     file_size = os.path.getsize(path)
     print(f"      c. Reduced PNG palette file size ({file_size:,} bytes)")
     
