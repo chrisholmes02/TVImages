@@ -406,7 +406,7 @@ def capture_canvas_and_upload(page, path):
 
 #Publish the GitHub backdrop URL path to Nuvio
 def publish_collection(client, PROFILE_ID, FOLDER_NAME, BACKDROP_URL):
-    print(f"      d. Publishing backdrop to Nuvio, on Profile {PROFILE_ID} ... ", end="")
+    print(f"      e. Publishing backdrop to Nuvio, on Profile {PROFILE_ID} ... ", end="")
     BACKDROP_URL = f"https://raw.githubusercontent.com/chrisholmes02/TVImages/main/Backdrops/{BACKDROP_URL}"
     
     current = client.pull_collections(PROFILE_ID)
