@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Weekly Backdrop Generator Automation Script
 v1.0
@@ -19,7 +18,8 @@ from PIL import Image
 
 # Environment variables
 # GitHub
-GITHUB_TOKEN    = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN    = "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"
+                  #os.environ["GITHUB_TOKEN"] NOTE Use if ever running in a GitHub Actions workflow
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 
@@ -338,13 +338,13 @@ def capture_canvas_and_upload(page, path):
         sys.exit(1) 
 
     # Save the image locally to a temporary file before shrinking the palette and uploading to GitHub
-    with open("temp.png", "wb") as f:
+    with open(path, "wb") as f:
         f.write(png_bytes)
     print(f"      b. Saved image locally: {path} ({len(png_bytes):,} bytes)")
     
     # Shrink PNG palette to reduce file size while maintaining quality
-    shrink_png_palette("temp.png", path)
-    os.remove("temp.png")  # Remove the original unoptimized file
+    shrink_png_palette(path, path)
+    #os.remove("temp.png")  # Remove the original unoptimized file
     file_size = os.path.getsize(path)
     print(f"      c. Reduced PNG palette file size ({file_size:,} bytes)")
     
