@@ -534,7 +534,6 @@ def main():
     with open("C:\\GHT.txt", "r") as file:
         GHT = file.readline().strip()
 
-    
     generate_backdrops()
 
     print("3. Done Successfully!")
