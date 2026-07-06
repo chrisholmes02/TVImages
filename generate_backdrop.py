@@ -82,7 +82,7 @@ def generate_backdrops():
         
     ## Generate 'New Movies' backdrop
         collection = "New Movies"
-        print(f"↳  A. Generating backdrop for '{collection}'")
+        print(f"   A. Generating backdrop for '{collection}'")
         page.get_by_role("button", name="Trakt").click()
 
         page.get_by_role("button", name="Popular on Trakt").click()
