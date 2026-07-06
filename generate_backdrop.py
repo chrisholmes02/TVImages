@@ -536,7 +536,7 @@ def main():
 
     generate_backdrops()
 
-    print("3. Done Successfully!")
+    print("5. Done Successfully!")
 
 
 if __name__ == "__main__":
