@@ -11,15 +11,17 @@ import base64
 import datetime
 import json
 import requests
+import smtplib
+import traceback
 
+from email.mime.text import MIMEText
 from copy import deepcopy
 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 from PIL import Image
 
 # Environment variables
 # GitHub
-GITHUB_TOKEN    = "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"
-                  #os.environ["GITHUB_TOKEN"] NOTE Use if ever running in a GitHub Actions workflow
+GITHUB_TOKEN    = "" #os.environ["GITHUB_TOKEN"] NOTE Use if ever running in a GitHub Actions workflow
 GITHUB_BRANCH   = os.environ.get("GITHUB_BRANCH", "main")
 GITHUB_FILE     = "Backdrops/"
 
@@ -403,6 +405,7 @@ def capture_canvas_and_upload(page, path):
         print(f"✗ GitHub API error {put_resp.status_code}: {put_resp.text}")
         sys.exit(1)
 
+    os.remove(path)  # Remove the local file after uploading to GitHub
     return path
 
 #Publish the GitHub backdrop URL path to Nuvio
@@ -467,6 +470,7 @@ class NuvioClient:
             {"p_profile_id": profile_id, "p_collections_json": collections},
         )
 
+# Finds Nuvio folders by name across all collections, returns a list of (collection, folder) tuples
 def find_folders_by_name(collections: list, folder_name: str) -> list:
     """Returns a list of (collection, folder) tuples for every folder
     whose title exactly matches folder_name, across all collections."""
@@ -477,6 +481,7 @@ def find_folders_by_name(collections: list, folder_name: str) -> list:
                 matches.append((c, f))
     return matches
 
+# Sets the heroBackdropUrl for a folder in a collection, or clears it if url == "clear"
 def set_folder_backdrop(collections: list, folder_name: str, url: str) -> None:
     """Sets (or clears, if url == 'clear') the heroBackdropUrl for the
     folder whose title matches folder_name, in-place. Raises ValueError
@@ -508,11 +513,28 @@ def shrink_png_palette(input_path, output_path):
     # Save the optimized file
     quantized_img.save(output_path, optimize=True)
 
+# Sends me an email if the script fails for any reason
+def send_error_email(error_text, to_addr, from_addr, smtp_server, smtp_port, username, password):
+    msg = MIMEText(error_text)
+    msg["Subject"] = "Nuvio Weekly Backdrop Generator Script Error Alert"
+    msg["From"] = from_addr
+    msg["To"] = to_addr
+
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(username, password)
+        server.sendmail(from_addr, [to_addr], msg.as_string())
 
 def main():
+    global GITHUB_TOKEN
+    
     print("=" * 60)
     print("  Nuvio Backdrop Image Generator - Weekly Automation")
     print("=" * 60, "\n")
+    
+    with open("GITHUB_TOKEN.txt", "r") as file:
+        GITHUB_TOKEN = file.readline().strip()
+
     
     generate_backdrops()
 
@@ -520,4 +542,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        error_text = traceback.format_exc()
+        send_error_email(
+            error_text=error_text,
+            to_addr="chris.holmes02@gmail.com",
+            from_addr="chris.holmes02@gmail.com",
+            smtp_server="smtp.gmail.com",
+            smtp_port=587,
+            username="chris.holmes02@gmail.com",
+            password="fmyl kukk wwcz uwfb",  # use an app password, not your real password
+        )
+        raise  # re-raise so the script still exits with an error
