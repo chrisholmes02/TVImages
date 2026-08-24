@@ -16,7 +16,7 @@ import traceback
 
 from email.mime.text import MIMEText
 from copy import deepcopy
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+from playwright.sync_api import expect, sync_playwright, TimeoutError as PWTimeout
 from PIL import Image
 
 # Environment variables
@@ -29,7 +29,7 @@ GITHUB_FILE     = "Backdrops/"
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
 MDBLIST_KEY     = "yiuz1vhq6o16wxv4o2y7km8xw"
-TRAKT_KEY       = "9ff48c3135acd6cc174fc136eb6389d1d51a86bf861862c75ea8a753cf23309d"
+TRAKT_KEY       = "LL1TPS-M_U9REyoxbtqRUuq7N7w1BaQWwHd-a_ubqqE"
 
 #Nuvio
 BASE_URL        = "https://api.nuvio.tv"
@@ -55,7 +55,7 @@ def generate_backdrops():
     with sync_playwright() as p:
         print("2. Opening Chromium browser in headless session")
         
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
 
@@ -309,7 +309,8 @@ def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Chris").click()
     page.get_by_alt_text(collection).click()
     page.get_by_role("button", name="Save to Nuvio").click()
-    page.get_by_role("button", name="Save to Nuvio").click(trial=True) #Wait for button to be enabled again, this means process finished
+    expect(page.get_by_role("button", name="Save to Nuvio")).to_be_enabled() #Wait for button to be enabled again, this means process finished
+    #page.get_by_role("button", name="Save to Nuvio").click(trial=True)
     page.get_by_role("button", name="Close").click() #Close the success message
     print("saved to Nuvio")
 
@@ -320,7 +321,8 @@ def capture_canvas_and_upload(page, path):
     path = f"Backdrop - {path} " + datetime.date.today().strftime("%Y-%m-%d") + ".png"
     
     page.get_by_role("button", name="Generate Backdrop").click()
-    page.get_by_role("button", name="Download").click(trial=True) #Wait for button to be enabled again, this means process finished
+    expect(page.get_by_role("button", name="Download")).to_be_enabled()  #Wait for button to be enabled again, this means process finished
+    #page.get_by_role("button", name="Download").click(trial=True)
     
     # Locate image data from the canvas element
     canvas_data: str = page.evaluate("""() => {
