@@ -1,8 +1,8 @@
 """
 Weekly Backdrop Generator Automation Script
-v1.5.1
+v1.5
 By Chris Holmes
-8/24/2026
+7/4/2026
 
 This script automates the process of generating backdrop images for various collections using the Nuvio Backdrop Generator website. It uses Playwright to interact with the website, captures the generated backdrop images, optimizes them, and uploads them to a GitHub repository. Additionally, it publishes the backdrop URLs to the Nuvio API for use in the Nuvio platform.
 
@@ -11,7 +11,6 @@ v1.0    - Initial release
 v1.1    - Added error handling and email notifications for script failures.
 v1.2    - Updated to use Nuvio API for publishing backdrops instead of website.
 v1.5    - Website changed list configuration, updated to use new options.
-v1.5.1  - Created new Trakt API key. Updated to cleaner way to wait for buttons to be enabled.
 """
 
 import os
