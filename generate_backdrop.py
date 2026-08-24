@@ -1,8 +1,17 @@
 """
 Weekly Backdrop Generator Automation Script
-v1.0
+v1.5.1
 By Chris Holmes
-7/4/2026
+8/24/2026
+
+This script automates the process of generating backdrop images for various collections using the Nuvio Backdrop Generator website. It uses Playwright to interact with the website, captures the generated backdrop images, optimizes them, and uploads them to a GitHub repository. Additionally, it publishes the backdrop URLs to the Nuvio API for use in the Nuvio platform.
+
+Revision History:
+v1.0    - Initial release
+v1.1    - Added error handling and email notifications for script failures.
+v1.2    - Updated to use Nuvio API for publishing backdrops instead of website.
+v1.5    - Website changed list configuration, updated to use new options.
+v1.5.1  - Created new Trakt API key. Updated to cleaner way to wait for buttons to be enabled.
 """
 
 import os
@@ -16,7 +25,7 @@ import traceback
 
 from email.mime.text import MIMEText
 from copy import deepcopy
-from playwright.sync_api import expect, sync_playwright, TimeoutError as PWTimeout
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 from PIL import Image
 
 # Environment variables
@@ -29,7 +38,7 @@ GITHUB_FILE     = "Backdrops/"
 GENERATOR_URL   = "https://paytonjewell.github.io/Nuvio-Backdrop-Generator/"
 TMDB_KEY        = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlY2RkZjFjNzk4ZGUzYTRjNzk1NGViOTRkM2FkODY3ZCIsIm5iZiI6MTc3MDc3MTQwNi4wMDE5OTk5LCJzdWIiOiI2OThiZDNjZDJhMWM2MTI2ZTc4ODVjODgiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.EnCCVp3ieKgmi5hFEavsPkDBfA2_e7gI2iAuLSJYYG0"
 MDBLIST_KEY     = "yiuz1vhq6o16wxv4o2y7km8xw"
-TRAKT_KEY       = "LL1TPS-M_U9REyoxbtqRUuq7N7w1BaQWwHd-a_ubqqE"
+TRAKT_KEY       = "2c-B05W7TQtVAr-WFwetMTFGBa5EhpzJNKDy1yT4Ht8"
 
 #Nuvio
 BASE_URL        = "https://api.nuvio.tv"
@@ -55,7 +64,7 @@ def generate_backdrops():
     with sync_playwright() as p:
         print("2. Opening Chromium browser in headless session")
         
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
@@ -207,10 +216,13 @@ def generate_backdrops():
     ## Generating 'Action' backdrop
         collection = "Action"
         print(f"   M. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="MDBList").click()
-        page.get_by_role("button", name="URL").click()
-        page.get_by_text("Top lists").click()
-        page.get_by_role("button", name="— choose a list —").click()
+        page.get_by_role("button", name="Movies & Shows").click()
+        page.get_by_text("Movies", exact=True).click()  
+        page.get_by_role("button", name="Popular", exact=True).click()
+        page.get_by_text("Top Rated").click()
+        page.get_by_role("button", name="Starz", exact=True).click()
+        page.get_by_text("Any", exact=True).click()    
+        page.get_by_role("button", name="Any Genre").click()
         page.get_by_text("Action").click()
         #generate_backdrop_add_to_Nuvio(page, collection)
         path = capture_canvas_and_upload(page, collection)
@@ -220,7 +232,7 @@ def generate_backdrops():
         collection = "Comedy"
         print(f"   N. Generating backdrop for '{collection}'")
         page.get_by_role("button", name="Action").click()
-        page.get_by_text("Comedy (").click()
+        page.get_by_text("Comedy").click()
         #generate_backdrop_add_to_Nuvio(page, collection)
         path = capture_canvas_and_upload(page, collection)
         publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
@@ -228,8 +240,8 @@ def generate_backdrops():
     ## Generating 'Crime' backdrop
         collection = "Crime"
         print(f"   O. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Comedy (").click()
-        page.get_by_text("Crime (").click()
+        page.get_by_role("button", name="Comedy").click()
+        page.get_by_text("Crime").click()
         #generate_backdrop_add_to_Nuvio(page, collection)
         path = capture_canvas_and_upload(page, collection)
         publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
@@ -237,57 +249,16 @@ def generate_backdrops():
     ## Generating 'Drama' backdrop
         collection = "Drama"
         print(f"   P. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Crime (").click()
+        page.get_by_role("button", name="Crime").click()
         page.get_by_text("Drama").click()
         #generate_backdrop_add_to_Nuvio(page, collection)
         path =capture_canvas_and_upload(page, collection)
         publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
-    ## Generating 'Thriller' backdrop
-        collection = "Thriller"
-        print(f"   Q. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Drama").click()
-        page.get_by_text("Thriller").click()
-        #generate_backdrop_add_to_Nuvio(page, collection)
-        path = capture_canvas_and_upload(page, collection)
-        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
-
-    ## Generating 'Sci-Fi' backdrop
-        collection = "Sci-Fi"
-        print(f"   R. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Thriller").click()
-        page.get_by_text("Sci-Fi (").click()
-        #generate_backdrop_add_to_Nuvio(page, collection)
-        path = capture_canvas_and_upload(page, collection)
-        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
-
-    ## Generating 'War Stories' backdrop
-        collection = "War Stories"
-        print(f"   S. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Sci-Fi (").click()
-        page.get_by_text("War").click()
-        #generate_backdrop_add_to_Nuvio(page, collection)
-        path = capture_canvas_and_upload(page, collection)
-        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
-
-    ## Generating 'Romance' backdrop
-        collection = "Romance"
-        print(f"   T. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="TMDB").click()
-        page.get_by_role("button", name="Movies & Shows").click()
-        page.get_by_text("Movies", exact=True).click()
-        page.get_by_role("button", name="Starz").click()
-        page.get_by_text("Any", exact=True).click()
-        page.get_by_role("button", name="Any Genre").click()
-        page.get_by_text("Romance").click()
-        #generate_backdrop_add_to_Nuvio(page, collection)
-        path = capture_canvas_and_upload(page, collection)
-        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
-
     ## Generating 'Kids & Family' backdrop
         collection = "Kids & Family"
         print(f"   U. Generating backdrop for '{collection}'")
-        page.get_by_role("button", name="Romance").click()
+        page.get_by_role("button", name="Drama").click()
         page.get_by_text("Family").click()
         #generate_backdrop_add_to_Nuvio(page, collection)
         path = capture_canvas_and_upload(page, collection)
@@ -302,6 +273,42 @@ def generate_backdrops():
         path = capture_canvas_and_upload(page, collection)
         publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
 
+    ## Generating 'Romance' backdrop
+        collection = "Romance"
+        print(f"   T. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Myster").click()
+        page.get_by_text("Romance").click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
+
+    ## Generating 'Sci-Fi' backdrop
+        collection = "Sci-Fi"
+        print(f"   R. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Romance").click()
+        page.get_by_text("Science Fiction").click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
+
+    ## Generating 'Thriller' backdrop
+        collection = "Thriller"
+        print(f"   Q. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Science Fiction").click()
+        page.get_by_text("Thriller").click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
+
+    ## Generating 'War Stories' backdrop
+        collection = "War Stories"
+        print(f"   S. Generating backdrop for '{collection}'")
+        page.get_by_role("button", name="Thriller").click()
+        page.get_by_text("War").click()
+        #generate_backdrop_add_to_Nuvio(page, collection)
+        path = capture_canvas_and_upload(page, collection)
+        publish_collection(client, 1, collection, path); publish_collection(client, 2, collection, path)
+
 ### Generates backdrop and saves to collections with inernal Nuvio API. NOTE Possibly broken due to website changes.
 def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Generate Backdrop").click()
@@ -309,8 +316,7 @@ def generate_backdrop_add_to_Nuvio(page, collection):
     page.get_by_role("button", name="Chris").click()
     page.get_by_alt_text(collection).click()
     page.get_by_role("button", name="Save to Nuvio").click()
-    expect(page.get_by_role("button", name="Save to Nuvio")).to_be_enabled() #Wait for button to be enabled again, this means process finished
-    #page.get_by_role("button", name="Save to Nuvio").click(trial=True)
+    page.get_by_role("button", name="Save to Nuvio").click(trial=True) #Wait for button to be enabled again, this means process finished
     page.get_by_role("button", name="Close").click() #Close the success message
     print("saved to Nuvio")
 
@@ -321,8 +327,7 @@ def capture_canvas_and_upload(page, path):
     path = f"Backdrop - {path} " + datetime.date.today().strftime("%Y-%m-%d") + ".png"
     
     page.get_by_role("button", name="Generate Backdrop").click()
-    expect(page.get_by_role("button", name="Download")).to_be_enabled()  #Wait for button to be enabled again, this means process finished
-    #page.get_by_role("button", name="Download").click(trial=True)
+    page.get_by_role("button", name="Download").click(trial=True) #Wait for button to be enabled again, this means process finished
     
     # Locate image data from the canvas element
     canvas_data: str = page.evaluate("""() => {
@@ -530,7 +535,7 @@ def main():
     global GHT
     
     print("=" * 60)
-    print("  Nuvio Backdrop Image Generator - Weekly Automation")
+    print("  Nuvio Backdrop Image Generator - Weekly Automation - " + datetime.date.today().strftime("%Y-%m-%d"))
     print("=" * 60, "\n")
     
     with open("C:\\GHT.txt", "r") as file:
@@ -541,9 +546,11 @@ def main():
     print("5. Done Successfully!")
 
 
+# Error handling: If the script fails for any reason, send an email to me with the error details
 if __name__ == "__main__":
     try:
         main()
+
     except Exception:
         error_text = traceback.format_exc()
         send_error_email(
