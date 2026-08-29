@@ -4,7 +4,9 @@ v1.5
 By Chris Holmes
 7/4/2026
 
-This script automates the process of generating backdrop images for various collections using the Nuvio Backdrop Generator website. It uses Playwright to interact with the website, captures the generated backdrop images, optimizes them, and uploads them to a GitHub repository. Additionally, it publishes the backdrop URLs to the Nuvio API for use in the Nuvio platform.
+This script automates the process of generating backdrop images for various collections using the Nuvio Backdrop Generator website. 
+It uses Playwright to interact with the website, captures the generated backdrop images, optimizes them, and uploads them to a GitHub repository. 
+Additionally, it publishes the backdrop URLs to the Nuvio API for use in the Nuvio platform.
 
 Revision History:
 v1.0    - Initial release
