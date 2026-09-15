@@ -1,0 +1,36 @@
+{
+  "metas": [
+    {
+      "id": "tt13210838",
+      "type": "series",
+      "name": "The Gentlemen",
+      "poster": "https://images.metahub.space/poster/small/tt13210838/img",
+      "background": "https://images.metahub.space/background/medium/tt13210838/img",
+      "description": "When aristocratic Eddie inherits the family estate, he discovers that it's home to a huge weed empire, and its proprietors aren't going anywhere.",
+      "releaseInfo": "2024–",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Crime"
+      ],
+      "posterShape": "poster",
+      "imdbRating": "8"
+    },
+    {
+      "id": "tt28014327",
+      "type": "movie",
+      "name": "Mayday",
+      "poster": "https://images.metahub.space/poster/small/tt28014327/img",
+      "background": "https://images.metahub.space/background/medium/tt28014327/img",
+      "description": "Lieutenant Troy Brennan's reconnaissance mission over Soviet territory goes awry, forcing him to crash-land and survive in Russian wilderness while evading capture or rescue.",
+      "releaseInfo": "2026",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy"
+      ],
+      "posterShape": "poster",
+      "imdbRating": "6.9"
+    }
+  ]
+}
