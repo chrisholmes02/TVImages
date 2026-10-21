@@ -6,7 +6,7 @@ A self-hosted add-on for Nuvio that republishes your own Nuvio Library as a cata
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Your Library as a Catalog**: reads a Nuvio profile's Library and serves it as a Movies row and a Series row, or as one combined row.
 - **Any Number of Profiles**: each add-on profile has its own settings, add-on link and cache, and points at one Nuvio profile (1 to 6). Several can point at the same one.
@@ -18,21 +18,21 @@ A self-hosted add-on for Nuvio that republishes your own Nuvio Library as a cata
 
 ---
 
-## 🧩 What You Need
+## What You Need
 
 - **Docker**: [Docker Desktop](https://docs.docker.com/get-docker/) on Windows or macOS, Docker Engine on Linux.
 - **A Nuvio Account**: the email and password you use in Nuvio, so the add-on can read your Library.
-- **Nuvio's Public API Key**: the same value your Nuvio app uses. It is not included in this project.
+- **Nuvio's Public API Key**: already filled in the examples below, so there is nothing to paste. Change it only if Nuvio changes its key.
 - **A TMDB API Key (Optional)**: only needed for TMDB artwork and landscape crops.
 
 ---
 
-## 🛠️ Installation
+## Installation
 
 ### Option 1: Docker Compose (Recommended)
 
 1. Create a folder for it, for example `nuvio_library`.
-2. In that folder, create a file named `docker-compose.yml` with this content, and change the three marked values:
+2. In that folder, create a file named `docker-compose.yml` with this content, and change the two marked values:
 
    ```yaml
    services:
@@ -44,8 +44,8 @@ A self-hosted add-on for Nuvio that republishes your own Nuvio Library as a cata
          - "7000:7000"
        environment:
          ADMIN_PASSWORD: "change-me"                # 1. the password for the editor
-         NUVIO_API_KEY: "paste-nuvio-public-key"    # 2. Nuvio's public API key
-         HOST_NAME: "http://192.168.1.50:7000"      # 3. the address your Nuvio apps use to reach this machine
+         NUVIO_API_KEY: "sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN"   # Nuvio's public API key, already filled in
+         HOST_NAME: "http://192.168.1.50:7000"      # 2. the address your Nuvio apps use to reach this machine
        volumes:
          - nuvio_library_data:/data
 
@@ -69,7 +69,7 @@ To update later: `docker compose pull`, then `docker compose up -d`. To stay on 
 ```bash
 docker run -d --name nuvio_library --restart unless-stopped -p 7000:7000 \
   -e ADMIN_PASSWORD="change-me" \
-  -e NUVIO_API_KEY="paste-nuvio-public-key" \
+  -e NUVIO_API_KEY="sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN" \
   -e HOST_NAME="http://192.168.1.50:7000" \
   -v nuvio_library_data:/data \
   ghcr.io/chrisholmes02/nuvio_library:latest
@@ -79,7 +79,7 @@ On Windows PowerShell, end each line with a backtick (`` ` ``) instead of `\`.
 
 ### Option 3: Build from Source
 
-Download this repository (**Code**, then **Download ZIP**), unzip it, and copy `docker-compose.example.yml` to `docker-compose.yml`. Replace its `image:` line with `build: .`, set the three values, then run `docker compose up -d --build` in that folder.
+Download this repository (**Code**, then **Download ZIP**), unzip it, and copy `docker-compose.example.yml` to `docker-compose.yml`. Replace its `image:` line with `build: .`, set the two marked values, then run `docker compose up -d --build` in that folder.
 
 ### First-Time Setup
 
@@ -92,14 +92,14 @@ Nothing saves automatically. Save the Account tab first, then the profile, then 
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
 | Variable         | Default                | Required | Meaning |
 |------------------|------------------------|----------|---------|
 | `ADMIN_PASSWORD` | none                   | Yes      | Password for the web editor. |
-| `NUVIO_API_KEY`  | none                   | Yes      | Nuvio's public API key. It is the same for every Nuvio user and is not included in this project. |
+| `NUVIO_API_KEY`  | none                   | Yes      | Nuvio's public API key. It is the same for every Nuvio user and is already filled in the examples above. Change it only if Nuvio changes its key. |
 | `HOST_NAME`      | from the request       | Advised  | The public base URL, no trailing slash. It builds the add-on link and cached image links. |
 | `PORT`           | `7000`                 | No       | Port the app listens on inside the container. If you change it, change the container side of the port mapping to match. |
 | `DATA_DIR`       | `/data`                | No       | Where the database, session key and image caches are stored. Mount it as a volume. |
@@ -134,7 +134,7 @@ The TMDB settings (language, lookup TTL, smaller images and the crop) are locked
 
 ---
 
-## 🔍 How It Works
+## How It Works
 
 - **Building:** a build downloads the Library, drops titles without an ID, sorts them and turns each into a catalog entry. The catalog lives in memory, per profile.
 - **Refreshing:** with Refresh in Background on, the catalog is rebuilt when its cache expires. If Nuvio can't be reached, the last catalog keeps being served and the next try comes five minutes later. A Library that suddenly comes back empty does not replace a catalog that has titles.
@@ -146,40 +146,7 @@ The TMDB settings (language, lookup TTL, smaller images and the crop) are locked
 
 ---
 
-## 📜 Logs
-
-Logs go to stdout, so `docker compose logs -f` shows them. Add `-t` for timestamps. A line is `[LEVEL] [tag] message`, and the tag is the profile's name (`[Account]` for account actions):
-
-```
-Nuvio Library 1.0.0
-• Port 7000 · Account saved · TMDB enabled
-• Profile 1 → Nuvio profile 1
-[INFO] [Profile 1] [startup] catalog built: 34 item(s) (28 movie, 6 series) from Nuvio profile 1 in 5.64s
-[INFO] [Profile 1] [cache-warming] 68/68 image(s) ready in 11.2s: 68 downloaded (5.4 MB), 0 already cached, 0 failed, 0 stale file(s) removed, 0 re-checked
-[INFO] [Profile 1] [tmdb-art-refresh] 34/34 title(s) looked up in 3.8s: 6 with new artwork, 0 failed
-```
-
-Builds, profile and account changes, installs and every failure are logged. Sign-ins and ordinary catalog requests are not. `WARNING` marks a failure, and `LOG_LEVEL=DEBUG` adds individual image and TMDB lookup failures.
-
----
-
-## 🔌 Endpoints
-
-Add-on routes (open, so Nuvio can use them):
-
-- `/<id>/manifest.json`: the add-on manifest for one profile.
-- `/<id>/catalog/<type>/<catalog id>.json`: a catalog page, with `/skip=N` for paging.
-- `/<id>/poster-cache/<kind>/<file>`: a cached poster or landscape image.
-- `/<id>/configure`: opens the editor on that profile.
-
-Editor routes (need the editor sign-in):
-
-- `/configure`: the web editor.
-- `/api/*`: the editor's API.
-
----
-
-## 🔒 Security
+## Security
 
 - The editor signs you out after an hour without activity, and five wrong passwords from one address lock it for a minute. Put it behind HTTPS and a reverse proxy.
 - Your Nuvio password and TMDB key are stored in plain text in the database, because the add-on has to sign in for you. Keep the data folder private.
@@ -188,7 +155,7 @@ Editor routes (need the editor sign-in):
 
 ---
 
-## 🧑‍💻 Development
+## Development
 
 ```bash
 pip install -r requirements.txt      # Flask, requests, gunicorn, Pillow
@@ -202,21 +169,15 @@ ADMIN_PASSWORD=... NUVIO_API_KEY=... DATA_DIR=./data \
 
 ---
 
-## 🤝 Contributing
-
-Issues and pull requests are welcome. Please open an issue before large changes.
-
----
-
-## 📄 License
+## License
 
 MIT, see [LICENSE](LICENSE).
 
 ---
 
-## 🙏 Credits
+## Credits
 
-- Nuvio
+- [Nuvio](https://nuvio.tv)
 - [TMDB](https://www.themoviedb.org/)
 - [Docker](https://www.docker.com/)
 - [Flask](https://flask.palletsprojects.com/)
@@ -225,6 +186,6 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 Nuvio Library is an independent, self-hosted add-on. It is not made by or affiliated with Nuvio, and it signs in to your Nuvio account only to read your own Library. Artwork availability depends on your Library and on TMDB.
