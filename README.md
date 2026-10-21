@@ -90,6 +90,19 @@ Download this repository (**Code**, then **Download ZIP**), unzip it, and copy `
 
 Nothing saves automatically. Save the Account tab first, then the profile, then use Refresh Catalog or Install to Nuvio. The editor tells you if something is still unsaved.
 
+### Reaching the Add-on from Nuvio
+
+Nuvio runs on your phone or TV, so the add-on's address (`HOST_NAME`) must be one that **that device** can reach. The Install URL in the editor is built from it, so check the Install URL before you install.
+
+| Where Nuvio is                  | Use for `HOST_NAME`                                                                 |
+|---------------------------------|-------------------------------------------------------------------------------------|
+| On your home network            | The server's LAN address and the port on the host, for example `http://192.168.1.50:7000`. |
+| Away from home                  | A public `https://` address that leads to the add-on, through a reverse proxy or a tunnel. |
+
+- Do not use `localhost`, `127.0.0.1` or the container name (`nuvio_watchlist:7000`). Those only work on the server itself or between containers on the same Docker network, and never from a phone or TV. Install to Nuvio refuses a localhost address.
+- If you map a different port on the host, such as `8080:7000`, use the host side (`8080`) in `HOST_NAME`. The container side stays `7000`.
+- If you change `HOST_NAME`, open the editor again and use the new Install URL. Links you already installed keep the old address.
+
 ---
 
 ## Configuration
